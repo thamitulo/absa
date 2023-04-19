@@ -14,4 +14,8 @@ public interface CommonConstants {
     String CUSTOMER_EXISTS = "Customer already exists";
 
     String INVALID_ACCOUNTS = "INVALID OR UNKNOWN ACCOUNTS";
+
+    String INVALID_TRANSACTION = "Transaction not allowed from Savings Account";
+
+    String INSUFFICIENT_FUNDS = "Insufficient Funds";
 }

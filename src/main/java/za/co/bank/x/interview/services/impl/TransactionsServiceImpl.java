@@ -20,6 +20,7 @@ import java.util.*;
 
 import static za.co.bank.x.interview.enums.AccountType.CURRENT_ACCOUNT;
 import static za.co.bank.x.interview.enums.AccountType.SAVINGS_ACCOUNT;
+import static za.co.bank.x.interview.rules.RulesProcess.canTransact;
 import static za.co.bank.x.interview.utils.CommonConstants.*;
 
 @Slf4j
@@ -36,6 +37,8 @@ public class TransactionsServiceImpl implements TransactionsService {
         Optional<Account> optionalFromAccount = accountService.getAccountByAccountNumber(paymentRequest.getFromAccount());
         Optional<Account> optionalToAccount = accountService.getAccountByAccountNumber(paymentRequest.getToAccount());
 
+         canTransact(optionalFromAccount.get());
+
         if (!optionalFromAccount.isPresent() && !optionalToAccount.isPresent()) {
             throw new GeneralException(INVALID_ACCOUNTS);
         } else if (!optionalFromAccount.isPresent()) {
@@ -43,12 +46,13 @@ public class TransactionsServiceImpl implements TransactionsService {
             return processInwardPayment(optionalToAccount.get(), paymentRequest);
         } else if (!optionalToAccount.isPresent()) {
             // Outward payment to external bank
-            return processOutwardPayment(optionalFromAccount.get(), paymentRequest);
+                return processOutwardPayment(optionalFromAccount.get(), paymentRequest);
         } else {
             // Inter-Account transfer
             return processInternalTransfer(optionalFromAccount.get(), optionalToAccount.get(), paymentRequest);
         }
     }
+
 
     private TransactionResponse processInwardPayment(Account toAccount, PaymentRequest paymentRequest) {
         BigDecimal toAccountBalance = toAccount.getBalance() == null ? BigDecimal.ZERO : toAccount.getBalance();
@@ -57,7 +61,6 @@ public class TransactionsServiceImpl implements TransactionsService {
 
         if (toAccount.getAccountType() == SAVINGS_ACCOUNT) {
             interest = paymentRequest.getAmount().add(toAccountBalance).multiply(SAVINGS_INTEREST);
-
         }
         // Update account balances
         toAccount.setBalance(toAccountBalance.add(interest).add(paymentRequest.getAmount()));
@@ -100,7 +103,7 @@ public class TransactionsServiceImpl implements TransactionsService {
         */
         }
 
-        if(fromAccount.getAccountType() == CURRENT_ACCOUNT) {
+        if (fromAccount.getAccountType() == CURRENT_ACCOUNT) {
             // Charge the paying account only if it's current account
             paymentCharge = paymentRequest.getAmount().multiply(TRANSACTION_CHARGE);
    /*         PaymentRequest request = paymentRequest.toBuilder()
